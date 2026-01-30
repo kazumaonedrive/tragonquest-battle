@@ -461,7 +461,7 @@
         const enemies = [
             { name: "スライム", hp: 50, maxHp: 50, atk: 10, magic: false },
             { name: "すらいむんナイト", hp: 100, maxHp: 100, atk: 20, magic: true, magicAtk: 25 },
-            { name: "メタルすらいむん", hp: 3, maxHp: 3, atk: 26, fast: true, magicResist: true },
+            { name: "メタルすらいむん", hp: 3, maxHp: 3, atk: 25, fast: true, magicResist: true },
             { name: "すらいむんキング", hp: 270, maxHp: 270, atk: 45, sometimesFast: true, weakDefense: true }
         ];
 
@@ -829,7 +829,7 @@
             const sprite = document.getElementById('enemySprite');
             player.level = 100;
             player.maxHp = Math.floor(player.maxHp * 1.5);
-            player.atk = player.atk * 2;
+            player.atk = 45;
             player.hp = player.maxHp;
             player.mp = 30;
             items.yakusou += 2;
