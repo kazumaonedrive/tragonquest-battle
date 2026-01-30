@@ -493,7 +493,6 @@
         let gameOver = false;
         let pendingAction = null;
         let shouldStartFinalBgm = false;
-        let awaitingFinalBgmTap = false;
         let pendingBossAdvance = false;
 
         // ゲーム開始
@@ -603,11 +602,6 @@
             if (currentEnemyIndex < enemies.length) {
                 enemy = { ...enemies[currentEnemyIndex] };
                 turnCount = 0;
-                if (currentEnemyIndex === enemies.length - 1) {
-                    awaitingFinalBgmTap = true;
-                    document.addEventListener('touchstart', onFinalBgmTap, { once: true });
-                    document.addEventListener('pointerdown', onFinalBgmTap, { once: true });
-                }
                 showMessage(`${enemy.name}が あらわれた！`);
                 updateDisplay();
                 disableCommands(false);
@@ -620,14 +614,6 @@
                 playSe(SE_CLEAR);
                 showRestartButton(true, "スタートに戻る");
             }
-        }
-
-        function onFinalBgmTap() {
-            if (!awaitingFinalBgmTap) return;
-            awaitingFinalBgmTap = false;
-            startFinalBgm();
-            document.removeEventListener('touchstart', onFinalBgmTap);
-            document.removeEventListener('pointerdown', onFinalBgmTap);
         }
 
         function shakeEnemy() {
