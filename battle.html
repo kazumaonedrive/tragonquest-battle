@@ -400,22 +400,29 @@
         const BGM_FINAL = new Audio("images AI/e.mp3");
         BGM_FINAL.loop = true;
         BGM_FINAL.preload = "auto";
+        let pendingBgm = null;
 
         function playSe(audio) {
             audio.currentTime = 0;
             audio.play();
         }
 
+        function playBgm(audio) {
+            audio.currentTime = 0;
+            const p = audio.play();
+            if (p && typeof p.catch === 'function') {
+                p.catch(() => { pendingBgm = audio; });
+            }
+        }
+
         function startBattleBgm() {
             stopAllBgm();
-            BGM_BATTLE.currentTime = 0;
-            BGM_BATTLE.play();
+            playBgm(BGM_BATTLE);
         }
 
         function startFinalBgm() {
             stopAllBgm();
-            BGM_FINAL.currentTime = 0;
-            BGM_FINAL.play();
+            playBgm(BGM_FINAL);
         }
 
         function stopAllBgm() {
@@ -423,6 +430,7 @@
             BGM_BATTLE.currentTime = 0;
             BGM_FINAL.pause();
             BGM_FINAL.currentTime = 0;
+            pendingBgm = null;
         }
 
         // ゲームデータ
@@ -561,6 +569,11 @@
 
         async function playerAction(action) {
             if (gameOver) return;
+
+            if (pendingBgm) {
+                playBgm(pendingBgm);
+                pendingBgm = null;
+            }
 
             pendingAction = action;
             turnCount++;
