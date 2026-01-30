@@ -344,7 +344,7 @@
                         <div>MP: <span id="playerMP">30</span></div>
                     </div>
                     <div class="enemy-status">
-                        <div class="status-name" id="enemyName">スライム</div>
+                        <div class="status-name" id="enemyName">すらいむん</div>
                         <div>HP: <span id="enemyHP">50</span></div>
                         <div class="hp-bar-container">
                             <div class="hp-bar" id="enemyHPBar"></div>
@@ -354,7 +354,7 @@
                 <div class="items-display"><span id="itemName">やくそう</span>: <span id="itemCount">3</span>個　回復+<span id="healAmount">50</span></div>
             </div>
             <div class="message-box" id="messageBox">
-                スライムが あらわれた！
+                すらいむんが あらわれた！
             </div>
 
             <div class="command-panel" id="commandPanel">
@@ -377,7 +377,7 @@
         const TITLE_IMAGE = "images AI/0.png";  // タイトル画像
 
         const ENEMY_IMAGES = {
-            "スライム": "images AI/1.png",
+            "すらいむん": "images AI/1.png",
             "すらいむんナイト": "images AI/2.png",
             "メタルすらいむん": "images AI/3.png",
             "すらいむんキング": "images AI/4.png"
@@ -459,7 +459,7 @@
         let healAmount = 50;
 
         const enemies = [
-            { name: "スライム", hp: 50, maxHp: 50, atk: 10, magic: false },
+            { name: "すらいむん", hp: 50, maxHp: 50, atk: 10, magic: false },
             { name: "すらいむんナイト", hp: 100, maxHp: 100, atk: 20, magic: true, magicAtk: 25 },
             { name: "メタルすらいむん", hp: 3, maxHp: 3, atk: 24, fast: true, magicResist: true },
             { name: "すらいむんキング", hp: 270, maxHp: 270, atk: 45, sometimesFast: true, weakDefense: true }
@@ -594,10 +594,6 @@
             if (gameOver) return;
 
             unlockAudio();
-            if (shouldStartFinalBgm) {
-                startFinalBgm();
-                shouldStartFinalBgm = false;
-            }
             if (pendingBgm) {
                 playBgm(pendingBgm);
                 pendingBgm = null;
@@ -792,7 +788,6 @@
                     enemy = { ...enemies[currentEnemyIndex] };
                     turnCount = 0;
                     if (currentEnemyIndex === enemies.length - 1) {
-                        shouldStartFinalBgm = true;
                         awaitingFinalBgmTap = true;
                         document.addEventListener('touchstart', onFinalBgmTap, { once: true });
                         document.addEventListener('pointerdown', onFinalBgmTap, { once: true });
