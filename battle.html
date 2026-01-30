@@ -471,6 +471,8 @@
         let turnCount = 0;
         let gameOver = false;
         let pendingAction = null;
+        let shouldStartFinalBgm = false;
+        let awaitingFinalBgmTap = false;
 
         // ゲーム開始
         function startGame() {
@@ -562,6 +564,14 @@
             document.querySelectorAll('.cmd-btn').forEach(btn => btn.disabled = disabled);
         }
 
+        function onFinalBgmTap() {
+            if (!awaitingFinalBgmTap) return;
+            awaitingFinalBgmTap = false;
+            startFinalBgm();
+            document.removeEventListener('touchstart', onFinalBgmTap);
+            document.removeEventListener('pointerdown', onFinalBgmTap);
+        }
+
         function shakeEnemy() {
             const sprite = document.getElementById('enemySprite');
             sprite.classList.add('damage');
@@ -584,6 +594,10 @@
             if (gameOver) return;
 
             unlockAudio();
+            if (shouldStartFinalBgm) {
+                startFinalBgm();
+                shouldStartFinalBgm = false;
+            }
             if (pendingBgm) {
                 playBgm(pendingBgm);
                 pendingBgm = null;
@@ -778,7 +792,10 @@
                     enemy = { ...enemies[currentEnemyIndex] };
                     turnCount = 0;
                     if (currentEnemyIndex === enemies.length - 1) {
-                        startFinalBgm();
+                        shouldStartFinalBgm = true;
+                        awaitingFinalBgmTap = true;
+                        document.addEventListener('touchstart', onFinalBgmTap, { once: true });
+                        document.addEventListener('pointerdown', onFinalBgmTap, { once: true });
                     }
                     showMessage(`${enemy.name}が あらわれた！`);
                     updateDisplay();
