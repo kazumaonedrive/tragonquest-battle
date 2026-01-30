@@ -401,6 +401,18 @@
         BGM_FINAL.loop = true;
         BGM_FINAL.preload = "auto";
         let pendingBgm = null;
+        let audioUnlocked = false;
+
+        function unlockAudio() {
+            if (audioUnlocked) return;
+            audioUnlocked = true;
+            [SE_ATTACK, SE_MAGIC, SE_LEVEL, SE_CLEAR, SE_ITEM, BGM_BATTLE, BGM_FINAL].forEach(a => {
+                const p = a.play();
+                if (p && typeof p.catch === 'function') p.catch(() => {});
+                a.pause();
+                a.currentTime = 0;
+            });
+        }
 
         function playSe(audio) {
             audio.currentTime = 0;
@@ -462,6 +474,7 @@
 
         // ゲーム開始
         function startGame() {
+            unlockAudio();
             resetGameState();
             document.getElementById('titleScreen').style.display = 'none';
             document.getElementById('battleScreen').style.display = 'block';
@@ -570,6 +583,7 @@
         async function playerAction(action) {
             if (gameOver) return;
 
+            unlockAudio();
             if (pendingBgm) {
                 playBgm(pendingBgm);
                 pendingBgm = null;
@@ -789,6 +803,9 @@
                 }
             }
         }
+
+        document.addEventListener('touchstart', unlockAudio, { once: true });
+        document.addEventListener('pointerdown', unlockAudio, { once: true });
 
         async function levelUp() {
             playSe(SE_LEVEL);
