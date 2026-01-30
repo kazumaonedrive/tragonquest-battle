@@ -310,6 +310,24 @@
             color: #f80;
             font-weight: bold;
         }
+        .boss-advance {
+            display: flex;
+            justify-content: center;
+            padding: 8px 0 12px;
+        }
+        .boss-btn {
+            background: #000;
+            border: 3px solid #fff;
+            color: #fff;
+            padding: 10px 24px;
+            font-size: 16px;
+            font-family: 'DotGothic16', 'ＭＳ ゴシック', monospace;
+            cursor: pointer;
+        }
+        .boss-btn:hover {
+            background: #fff;
+            color: #000;
+        }
     </style>
 </head>
 <body>
@@ -473,6 +491,7 @@
         let pendingAction = null;
         let shouldStartFinalBgm = false;
         let awaitingFinalBgmTap = false;
+        let pendingBossAdvance = false;
 
         // ゲーム開始
         function startGame() {
@@ -501,6 +520,8 @@
             turnCount = 0;
             gameOver = false;
             pendingAction = null;
+            pendingBossAdvance = false;
+            showBossAdvance(false);
             document.getElementById('playerName').classList.remove('level-up');
             showRestartButton(false);
             showMessage(`${enemy.name}が あらわれた！`);
@@ -562,6 +583,39 @@
 
         function disableCommands(disabled) {
             document.querySelectorAll('.cmd-btn').forEach(btn => btn.disabled = disabled);
+        }
+
+        function showBossAdvance(show) {
+            const el = document.getElementById('bossAdvance');
+            if (!el) return;
+            el.style.display = show ? 'flex' : 'none';
+        }
+
+        function advanceToBoss() {
+            if (!pendingBossAdvance) return;
+            pendingBossAdvance = false;
+            showBossAdvance(false);
+            currentEnemyIndex++;
+            if (currentEnemyIndex < enemies.length) {
+                enemy = { ...enemies[currentEnemyIndex] };
+                turnCount = 0;
+                if (currentEnemyIndex === enemies.length - 1) {
+                    awaitingFinalBgmTap = true;
+                    document.addEventListener('touchstart', onFinalBgmTap, { once: true });
+                    document.addEventListener('pointerdown', onFinalBgmTap, { once: true });
+                }
+                showMessage(`${enemy.name}が あらわれた！`);
+                updateDisplay();
+                disableCommands(false);
+            } else {
+                showClearScreen();
+                document.getElementById('enemySprite').innerHTML = '<img src="images AI/5.png" alt="clear">';
+                showMessage('ゆうしゃの冒険は終わった...');
+                gameOver = true;
+                stopAllBgm();
+                playSe(SE_CLEAR);
+                showRestartButton(true, "スタートに戻る");
+            }
         }
 
         function onFinalBgmTap() {
@@ -780,18 +834,18 @@
 
                 if (enemy.name === "メタルすらいむん") {
                     await levelUp();
-                    await delay(4000);
+                    // 3秒後にボスへ進むボタンを表示
+                    await delay(3000);
+                    pendingBossAdvance = true;
+                    showBossAdvance(true);
+                    disableCommands(true);
+                    return;
                 }
 
                 currentEnemyIndex++;
                 if (currentEnemyIndex < enemies.length) {
                     enemy = { ...enemies[currentEnemyIndex] };
                     turnCount = 0;
-                    if (currentEnemyIndex === enemies.length - 1) {
-                        awaitingFinalBgmTap = true;
-                        document.addEventListener('touchstart', onFinalBgmTap, { once: true });
-                        document.addEventListener('pointerdown', onFinalBgmTap, { once: true });
-                    }
                     showMessage(`${enemy.name}が あらわれた！`);
                     updateDisplay();
                     await delay(1000);
