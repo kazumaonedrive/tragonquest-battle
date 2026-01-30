@@ -310,6 +310,24 @@
             color: #f80;
             font-weight: bold;
         }
+        .boss-advance {
+            display: flex;
+            justify-content: center;
+            padding: 8px 0 12px;
+        }
+        .boss-btn {
+            background: #000;
+            border: 3px solid #fff;
+            color: #fff;
+            padding: 10px 24px;
+            font-size: 16px;
+            font-family: 'DotGothic16', 'ＭＳ ゴシック', monospace;
+            cursor: pointer;
+        }
+        .boss-btn:hover {
+            background: #fff;
+            color: #000;
+        }
     </style>
 </head>
 <body>
@@ -344,7 +362,7 @@
                         <div>MP: <span id="playerMP">30</span></div>
                     </div>
                     <div class="enemy-status">
-                        <div class="status-name" id="enemyName">スライム</div>
+                        <div class="status-name" id="enemyName">すらいむん</div>
                         <div>HP: <span id="enemyHP">50</span></div>
                         <div class="hp-bar-container">
                             <div class="hp-bar" id="enemyHPBar"></div>
@@ -354,7 +372,10 @@
                 <div class="items-display"><span id="itemName">やくそう</span>: <span id="itemCount">3</span>個　回復+<span id="healAmount">50</span></div>
             </div>
             <div class="message-box" id="messageBox">
-                スライムが あらわれた！
+                すらいむんが あらわれた！
+            </div>
+            <div class="boss-advance" id="bossAdvance" style="display:none;">
+                <button class="boss-btn" id="bossAdvanceBtn" onclick="advanceToBoss()">ボスへ進む</button>
             </div>
 
             <div class="command-panel" id="commandPanel">
@@ -377,7 +398,7 @@
         const TITLE_IMAGE = "images AI/0.png";  // タイトル画像
 
         const ENEMY_IMAGES = {
-            "スライム": "images AI/1.png",
+            "すらいむん": "images AI/1.png",
             "すらいむんナイト": "images AI/2.png",
             "メタルすらいむん": "images AI/3.png",
             "すらいむんキング": "images AI/4.png"
@@ -400,22 +421,41 @@
         const BGM_FINAL = new Audio("images AI/e.mp3");
         BGM_FINAL.loop = true;
         BGM_FINAL.preload = "auto";
+        let pendingBgm = null;
+        let audioUnlocked = false;
+
+        function unlockAudio() {
+            if (audioUnlocked) return;
+            audioUnlocked = true;
+            [SE_ATTACK, SE_MAGIC, SE_LEVEL, SE_CLEAR, SE_ITEM, BGM_BATTLE, BGM_FINAL].forEach(a => {
+                const p = a.play();
+                if (p && typeof p.catch === 'function') p.catch(() => {});
+                a.pause();
+                a.currentTime = 0;
+            });
+        }
 
         function playSe(audio) {
             audio.currentTime = 0;
             audio.play();
         }
 
+        function playBgm(audio) {
+            audio.currentTime = 0;
+            const p = audio.play();
+            if (p && typeof p.catch === 'function') {
+                p.catch(() => { pendingBgm = audio; });
+            }
+        }
+
         function startBattleBgm() {
             stopAllBgm();
-            BGM_BATTLE.currentTime = 0;
-            BGM_BATTLE.play();
+            playBgm(BGM_BATTLE);
         }
 
         function startFinalBgm() {
             stopAllBgm();
-            BGM_FINAL.currentTime = 0;
-            BGM_FINAL.play();
+            playBgm(BGM_FINAL);
         }
 
         function stopAllBgm() {
@@ -423,6 +463,7 @@
             BGM_BATTLE.currentTime = 0;
             BGM_FINAL.pause();
             BGM_FINAL.currentTime = 0;
+            pendingBgm = null;
         }
 
         // ゲームデータ
@@ -439,9 +480,9 @@
         let healAmount = 50;
 
         const enemies = [
-            { name: "スライム", hp: 50, maxHp: 50, atk: 10, magic: false },
+            { name: "すらいむん", hp: 50, maxHp: 50, atk: 10, magic: false },
             { name: "すらいむんナイト", hp: 100, maxHp: 100, atk: 20, magic: true, magicAtk: 25 },
-            { name: "メタルすらいむん", hp: 3, maxHp: 3, atk: 26, fast: true, magicResist: true },
+            { name: "メタルすらいむん", hp: 3, maxHp: 3, atk: 24, fast: true, magicResist: true },
             { name: "すらいむんキング", hp: 270, maxHp: 270, atk: 45, sometimesFast: true, weakDefense: true }
         ];
 
@@ -451,9 +492,12 @@
         let turnCount = 0;
         let gameOver = false;
         let pendingAction = null;
+        let shouldStartFinalBgm = false;
+        let pendingBossAdvance = false;
 
         // ゲーム開始
         function startGame() {
+            unlockAudio();
             resetGameState();
             document.getElementById('titleScreen').style.display = 'none';
             document.getElementById('battleScreen').style.display = 'block';
@@ -478,6 +522,8 @@
             turnCount = 0;
             gameOver = false;
             pendingAction = null;
+            pendingBossAdvance = false;
+            showBossAdvance(false);
             document.getElementById('playerName').classList.remove('level-up');
             showRestartButton(false);
             showMessage(`${enemy.name}が あらわれた！`);
@@ -541,6 +587,35 @@
             document.querySelectorAll('.cmd-btn').forEach(btn => btn.disabled = disabled);
         }
 
+        function showBossAdvance(show) {
+            const el = document.getElementById('bossAdvance');
+            if (!el) return;
+            el.style.display = show ? 'flex' : 'none';
+        }
+
+        function advanceToBoss() {
+            if (!pendingBossAdvance) return;
+            pendingBossAdvance = false;
+            showBossAdvance(false);
+            startFinalBgm();
+            currentEnemyIndex++;
+            if (currentEnemyIndex < enemies.length) {
+                enemy = { ...enemies[currentEnemyIndex] };
+                turnCount = 0;
+                showMessage(`${enemy.name}が あらわれた！`);
+                updateDisplay();
+                disableCommands(false);
+            } else {
+                showClearScreen();
+                document.getElementById('enemySprite').innerHTML = '<img src="images AI/5.png" alt="clear">';
+                showMessage('ゆうしゃの冒険は終わった...');
+                gameOver = true;
+                stopAllBgm();
+                playSe(SE_CLEAR);
+                showRestartButton(true, "スタートに戻る");
+            }
+        }
+
         function shakeEnemy() {
             const sprite = document.getElementById('enemySprite');
             sprite.classList.add('damage');
@@ -561,6 +636,12 @@
 
         async function playerAction(action) {
             if (gameOver) return;
+
+            unlockAudio();
+            if (pendingBgm) {
+                playBgm(pendingBgm);
+                pendingBgm = null;
+            }
 
             pendingAction = action;
             turnCount++;
@@ -743,16 +824,18 @@
 
                 if (enemy.name === "メタルすらいむん") {
                     await levelUp();
-                    await delay(4000);
+                    // 3秒後にボスへ進むボタンを表示
+                    await delay(3000);
+                    pendingBossAdvance = true;
+                    showBossAdvance(true);
+                    disableCommands(true);
+                    return;
                 }
 
                 currentEnemyIndex++;
                 if (currentEnemyIndex < enemies.length) {
                     enemy = { ...enemies[currentEnemyIndex] };
                     turnCount = 0;
-                    if (currentEnemyIndex === enemies.length - 1) {
-                        startFinalBgm();
-                    }
                     showMessage(`${enemy.name}が あらわれた！`);
                     updateDisplay();
                     await delay(1000);
@@ -777,12 +860,15 @@
             }
         }
 
+        document.addEventListener('touchstart', unlockAudio, { once: true });
+        document.addEventListener('pointerdown', unlockAudio, { once: true });
+
         async function levelUp() {
             playSe(SE_LEVEL);
             const sprite = document.getElementById('enemySprite');
             player.level = 100;
             player.maxHp = Math.floor(player.maxHp * 1.5);
-            player.atk = player.atk * 2;
+            player.atk = 45;
             player.hp = player.maxHp;
             player.mp = 30;
             items.yakusou += 2;
